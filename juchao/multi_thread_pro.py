@@ -41,6 +41,7 @@ parase_out_file_path = OUT_DIR + '/parase_out_file.csv'
 parase_out = open(parase_out_file_path, 'w', newline='', encoding='gb18030')
 parase_out_writer = csv.writer(parase_out)
 
+
 get_url_thread = threading.Thread(target=get_url, args=(OUT_DIR, stack_code_set, START_DATE, END_DATE))
 download_pdf_thread = threading.Thread(target=download_pdf, args=(OUT_DIR,))
 # download_pdf_thread2 = threading.Thread(target=download_pdf, args=(OUT_DIR,))

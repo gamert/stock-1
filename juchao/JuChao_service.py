@@ -92,6 +92,7 @@ def get_response(page_num,stack_code,return_total_count=False,START_DATE = '2013
         return result_list
 
 
+# 取得财报url:
 def get_url(OUT_DIR, stack_code_set, START_DATE, END_DATE):
     START_DATE = START_DATE + '-01-01'
     END_DATE = END_DATE + '-01-01'
@@ -308,6 +309,10 @@ def _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword, POS = 1
 
         print('****time to open PDF file is {}'.format((start2 - start1)))
         print('****time to processing PDF file is {}'.format((start3 - start2)))
+
+
+
+
 
 
 def parase_pdf(table_keyword, inside_keyword, outside_keyword):
