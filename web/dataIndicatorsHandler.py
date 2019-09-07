@@ -14,7 +14,7 @@ import stockstats
 import numpy as np
 import pandas as pd
 from bokeh.layouts import gridplot
-from bokeh.palettes import Category20
+#from bokeh.palettes import Category20c
 from math import radians
 from bokeh.models import DatetimeTickFormatter
 
