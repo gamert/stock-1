@@ -28,6 +28,14 @@ HEADER = {
     'X-Requested-With': 'XMLHttpRequest'
 }
 
+# 
+class PdfHandler():
+    def __init__(self):
+        self.rLock3 = threading.RLock()
+
+    def handle(self, path):
+        pass
+
 # 从巨潮站获取pdf... 
 class JuChao_service():
 
@@ -35,11 +43,11 @@ class JuChao_service():
     # @PLATE
     # 公告类型：category_scgkfx_szsh（首次公开发行及上市）、category_ndbg_szsh（年度报告）、category_bndbg_szsh（半年度报告）
     # @CATEGORY
-    def __init__(self,logger,PLATE = 'szzx;',CATEGORY='category_bndbg_szsh;'): 
+    def __init__(self, pdfHandler, logger, PLATE = 'szzx;', CATEGORY='category_bndbg_szsh;'):
+        self.pdfHandler = pdfHandler
         self.logger = logger or InitLogger("log_juchao.log")
         self.rLock = threading.RLock()
         self.rLock2 = threading.RLock()
-        self.rLock3 = threading.RLock()
 
         self.url_list=Queue()
         self.pdffile_list=Queue()
@@ -216,11 +224,8 @@ class JuChao_service():
             else:
                 self.rLock.release()
 
-
-    def _parse_pdf_imp(self,path, table_keyword, inside_keyword, outside_keyword, POS = 1):
-        pass
-
-    def parase_pdf(self,table_keyword, inside_keyword, outside_keyword):
+    # ,table_keyword, inside_keyword, outside_keyword
+    def parase_pdf(self):
         while True:
             try:
                 path = None
@@ -231,7 +236,8 @@ class JuChao_service():
                     path = self.pdffile_list.get()
                 self.rLock2.release()
                 if path :
-                    _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword)
+                    self.pdfHandler.handle(path)
+                    #_parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword)
 
             except:
                 print('*****some thing error happend******')
@@ -239,11 +245,47 @@ class JuChao_service():
         return name_find, value_find, page_find  # 一定不要把return放到while里面，遇到return会立即结束
 
 
+# 
+class JuChaoServiceTask():
+    def __init__(self, juchao_service, stack_code_set, START_DATE, END_DATE, OUT_DIR): 
+
+        get_url_thread = threading.Thread(target=juchao_service.get_url, args=(OUT_DIR, stack_code_set, START_DATE, END_DATE))
+        download_pdf_thread = threading.Thread(target=juchao_service.download_pdf, args=(OUT_DIR,stack_code_set, START_DATE, END_DATE))
+        # download_pdf_thread2 = threading.Thread(target=download_pdf, args=(OUT_DIR,))
+        parase_pdf_thread = threading.Thread(target=juchao_service.parase_pdf)
+        parase_pdf_thread2 = threading.Thread(target=juchao_service.parase_pdf)
+        parase_pdf_thread3 = threading.Thread(target=juchao_service.parase_pdf)
+
+        get_url_thread.start()
+        download_pdf_thread.start()
+        # download_pdf_thread2.start()
+        parase_pdf_thread.start()
+        parase_pdf_thread2.start()
+        parase_pdf_thread3.start()
+
+        get_url_thread.join()
+        download_pdf_thread.join()
+        # download_pdf_thread2.join()
+        parase_pdf_thread.join()
+        parase_pdf_thread2.join()
+        parase_pdf_thread3.join()
+
+
+# 财报处理...'主要会计数据和财务指标'
+class PdfHandler_caiwuzhibiao(PdfHandler):
+    def __init__(self):
+        pass
+
+    def handle(self, path):
+        pdfcb = PdfCaibao()
+        pdfcb.parse_pdf(path)
+
 if __name__ == '__main__':
-    table_keyword = ['其他与经营活动', '现金']
-    table_keyword = ['主要会计数据和财务指标']
-    inside_keyword = ['审计', '咨询', '中介']  # ,'咨询','中介'
-    outside_keyword = ['收到']
+    cwzb = PdfHandler_caiwuzhibiao()
+    jcs = JuChao_service(cwzb)
+
+    stack_code_set = ['603118', '000002']  # just for test using
+    task = JuChaoServiceTask(jcs,stack_code_set,'2017','2019')
 
     path = "G:/_Stock/temp/000007全新好2016年半年度报告.(2181k).PDF"
     # _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword,0)

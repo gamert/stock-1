@@ -32,31 +32,10 @@ parase_out_file_path = OUT_DIR + '/parase_out_file.csv'
 parase_out = open(parase_out_file_path, 'w', newline='', encoding='gb18030')
 parase_out_writer = csv.writer(parase_out)
 
-class JuChaoServiceTask(JuChao_service):
-    def __init__(self): 
 
-        get_url_thread = threading.Thread(target=self.get_url, args=(OUT_DIR, stack_code_set, START_DATE, END_DATE))
-        download_pdf_thread = threading.Thread(target=self.download_pdf, args=(OUT_DIR,))
-        # download_pdf_thread2 = threading.Thread(target=download_pdf, args=(OUT_DIR,))
-        parase_pdf_thread = threading.Thread(target=self.parase_pdf, args=(table_keyword, inside_keyword, outside_keyword))
-        parase_pdf_thread2 = threading.Thread(target=self.parase_pdf, args=(table_keyword, inside_keyword, outside_keyword))
-        parase_pdf_thread3 = threading.Thread(target=self.parase_pdf, args=(table_keyword, inside_keyword, outside_keyword))
+class PdfHandler_kuaiji(PdfHandler):
 
-        get_url_thread.start()
-        download_pdf_thread.start()
-        # download_pdf_thread2.start()
-        parase_pdf_thread.start()
-        parase_pdf_thread2.start()
-        parase_pdf_thread3.start()
-
-        get_url_thread.join()
-        download_pdf_thread.join()
-        # download_pdf_thread2.join()
-        parase_pdf_thread.join()
-        parase_pdf_thread2.join()
-        parase_pdf_thread3.join()
-
-    def _parse_pdf_imp(self,path, table_keyword, inside_keyword, outside_keyword, POS = 1):
+    def handle(self, path, table_keyword, inside_keyword, outside_keyword, POS = 1):
         open_pdf_succeed = 1
         start1 = time.time()
         try:
@@ -168,3 +147,14 @@ class JuChaoServiceTask(JuChao_service):
 
             print('****time to open PDF file is {}'.format((start2 - start1)))
             print('****time to processing PDF file is {}'.format((start3 - start2)))
+
+
+
+if __name__ == '__main__':
+    table_keyword = ['其他与经营活动', '现金']
+    table_keyword = ['主要会计数据和财务指标']
+    inside_keyword = ['审计', '咨询', '中介']  # ,'咨询','中介'
+    outside_keyword = ['收到']
+
+    path = "G:/_Stock/temp/000007全新好2016年半年度报告.(2181k).PDF"
+    # _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword,0)
