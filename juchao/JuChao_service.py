@@ -6,7 +6,6 @@ import requests
 from queue import Queue
 import threading
 import pdfplumber
-from juchao.get_urlOfpdf_wyk import standardize_dir,__log_error,__filter_illegal_filename
 import logging
 
 def InitLogger(log_name):
@@ -21,6 +20,55 @@ def InitLogger(log_name):
     fh.setFormatter(formatter)
     logger.addHandler(fh)
     return logger
+
+def standardize_dir(dir_str):
+    assert (os.path.exists(dir_str)), 'Such directory \"' + str(dir_str) + '\" does not exists!'
+    if dir_str[len(dir_str) - 1] != '/':
+        return dir_str + '/'
+    else:
+        return dir_str
+
+error_log = "./error.log"
+def __log_error(err_msg):
+    err_msg = str(err_msg)
+    print(err_msg)
+    with open(error_log, 'a', encoding='gb18030') as err_writer:
+        err_writer.write(err_msg + '\n')
+
+
+def __filter_illegal_filename(filename):
+    illegal_char = {
+        ' ': '',
+        '*': '',
+        '/': '-',
+        '\\': '-',
+        ':': '-',
+        '?': '-',
+        '"': '',
+        '<': '',
+        '>': '',
+        '|': '',
+        '－': '-',
+        '—': '-',
+        '（': '(',
+        '）': ')',
+        'Ａ': 'A',
+        'Ｂ': 'B',
+        'Ｈ': 'H',
+        '，': ',',
+        '。': '.',
+        '：': '-',
+        '！': '_',
+        '？': '-',
+        '“': '"',
+        '”': '"',
+        '‘': '',
+        '’': ''
+    }
+    for item in illegal_char.items():
+        filename = filename.replace(item[0], item[1])
+    return filename
+
 
 URL = 'http://www.cninfo.com.cn/new/hisAnnouncement/query'
 HEADER = {
@@ -48,6 +96,9 @@ class JuChao_service():
         self.logger = logger or InitLogger("log_juchao.log")
         self.rLock = threading.RLock()
         self.rLock2 = threading.RLock()
+        # self.OUT_DIR="./temp"
+        self.out_dir = standardize_dir("./temp")
+        # error_log = self.out_dir + 'error.log'
 
         self.url_list=Queue()
         self.pdffile_list=Queue()
@@ -123,13 +174,11 @@ class JuChao_service():
     # 取得财报url:
     # @START_DATE
     # @END_DATE
-    def get_url(self,OUT_DIR, stack_code_set, START_DATE, END_DATE):
+    def get_url(self, stack_code_set, START_DATE, END_DATE):
         START_DATE = START_DATE + '-01-01'
         END_DATE = END_DATE + '-01-01'
         # 初始化重要变量
-        out_dir = standardize_dir(OUT_DIR)
-        error_log = out_dir + 'error.log'
-        output_csv_file = out_dir + self.OUTPUT_FILENAME.replace('/', '') + '_' + \
+        output_csv_file = self.out_dir + self.OUTPUT_FILENAME.replace('/', '') + '_' + \
                         START_DATE.replace('-', '') + '-' + END_DATE.replace('-', '') + '.csv'
         # with open(output_csv_file, 'w', newline='', encoding='gb18030') as csv_out:
         csv_out = open(output_csv_file, 'w', newline='', encoding='gb18030')
@@ -241,16 +290,15 @@ class JuChao_service():
 
             except:
                 print('*****some thing error happend******')
-
-        return name_find, value_find, page_find  # 一定不要把return放到while里面，遇到return会立即结束
+        # return name_find, value_find, page_find  # 一定不要把return放到while里面，遇到return会立即结束
 
 
 # 
 class JuChaoServiceTask():
-    def __init__(self, juchao_service, stack_code_set, START_DATE, END_DATE, OUT_DIR): 
+    def __init__(self, juchao_service, stack_code_set, START_DATE, END_DATE): 
 
-        get_url_thread = threading.Thread(target=juchao_service.get_url, args=(OUT_DIR, stack_code_set, START_DATE, END_DATE))
-        download_pdf_thread = threading.Thread(target=juchao_service.download_pdf, args=(OUT_DIR,stack_code_set, START_DATE, END_DATE))
+        get_url_thread = threading.Thread(target=juchao_service.get_url, args=(stack_code_set, START_DATE, END_DATE))
+        download_pdf_thread = threading.Thread(target=juchao_service.download_pdf, args=(stack_code_set, START_DATE, END_DATE))
         # download_pdf_thread2 = threading.Thread(target=download_pdf, args=(OUT_DIR,))
         parase_pdf_thread = threading.Thread(target=juchao_service.parase_pdf)
         parase_pdf_thread2 = threading.Thread(target=juchao_service.parase_pdf)
@@ -279,10 +327,12 @@ class PdfHandler_caiwuzhibiao(PdfHandler):
     def handle(self, path):
         pdfcb = PdfCaibao()
         pdfcb.parse_pdf(path)
+        # 上传到数据库
+        # insert_db()
 
 if __name__ == '__main__':
     cwzb = PdfHandler_caiwuzhibiao()
-    jcs = JuChao_service(cwzb)
+    jcs = JuChao_service(cwzb,None)
 
     stack_code_set = ['603118', '000002']  # just for test using
     task = JuChaoServiceTask(jcs,stack_code_set,'2017','2019')
