@@ -1,5 +1,3 @@
-from juchao.get_urlOfpdf_wyk import standardize_dir,__log_error,__filter_illegal_filename
-
 import csv
 import os
 import time
@@ -8,10 +6,31 @@ import requests
 from queue import Queue
 import threading
 import pdfplumber
+from juchao.get_urlOfpdf_wyk import standardize_dir,__log_error,__filter_illegal_filename
+import logging
 
+def InitLogger(log_name):
+    logger = logging.getLogger()
+    logger.setLevel(logging.WARNING)
+    # rq = time.strftime('%Y%m%d%H%M', time.localtime(time.time()))
+    # log_name = OUT_DIR + '/log_wyk.log'
+    logfile = log_name
+    fh = logging.FileHandler(logfile, mode='w')
+    fh.setLevel(logging.WARNING)
+    formatter = logging.Formatter("%(asctime)s - %(filename)s[line:%(lineno)d] - %(levelname)s: %(message)s")
+    fh.setFormatter(formatter)
+    logger.addHandler(fh)
+    return logger
+
+# 
 class JuChao_service():
 
-    def __init__(self):
+    # 板块类型：沪市：shmb；深市：szse；深主板：szmb；中小板：szzx；创业板：szcy；
+    # @PLATE
+    # 公告类型：category_scgkfx_szsh（首次公开发行及上市）、category_ndbg_szsh（年度报告）、category_bndbg_szsh（半年度报告）
+    # @CATEGORY
+    def __init__(self,logger,PLATE = 'szzx;',CATEGORY='category_bndbg_szsh;'): 
+        self.logger = logger or InitLogger("log_juchao.log")
         self.rLock = threading.RLock()
         self.rLock2 = threading.RLock()
         self.rLock3 = threading.RLock()
@@ -19,12 +38,9 @@ class JuChao_service():
         self.url_list=Queue()
         self.pdffile_list=Queue()
 
-
         self.OUTPUT_FILENAME = 'report'
-        # 板块类型：沪市：shmb；深市：szse；深主板：szmb；中小板：szzx；创业板：szcy；
-        self.PLATE = 'szzx;'
-        # 公告类型：category_scgkfx_szsh（首次公开发行及上市）、category_ndbg_szsh（年度报告）、category_bndbg_szsh（半年度报告）
-        self.CATEGORY = 'category_bndbg_szsh;'
+        self.PLATE = PLATE
+        self.CATEGORY = CATEGORY
 
         self.URL = 'http://www.cninfo.com.cn/new/hisAnnouncement/query'
         self.HEADER = {
@@ -36,7 +52,7 @@ class JuChao_service():
         self.RESPONSE_TIMEOUT = 10
 
 
-    def get_response(page_num,stack_code,return_total_count=False,START_DATE = '2013-01-01',END_DATE = '2018-01-01'):
+    def get_response(self,page_num,stack_code,return_total_count=False,START_DATE = '2013-01-01',END_DATE = '2018-01-01'):
 
         query = {
             'stock': stack_code,
@@ -96,7 +112,7 @@ class JuChao_service():
 
 
     # 取得财报url:
-    def get_url(OUT_DIR, stack_code_set, START_DATE, END_DATE):
+    def get_url(self,OUT_DIR, stack_code_set, START_DATE, END_DATE):
         START_DATE = START_DATE + '-01-01'
         END_DATE = END_DATE + '-01-01'
         # 初始化重要变量
@@ -112,7 +128,7 @@ class JuChao_service():
 
         for stack_code in stack_code_set:
             # 获取记录数、页数
-            item_count = get_response(1, stack_code, True, START_DATE=START_DATE, END_DATE=END_DATE)
+            item_count = self.get_response(1, stack_code, True, START_DATE=START_DATE, END_DATE=END_DATE)
             assert (item_count != []), 'Please restart this script!'
             begin_pg = 1
             end_pg = int(math.ceil(item_count / self.MAX_PAGESIZE))
@@ -123,7 +139,7 @@ class JuChao_service():
             # with open(output_csv_file, 'w', newline='', encoding='gb18030') as csv_out:
             # writer = csv.writer(csv_out)
             for i in range(begin_pg, end_pg + 1):
-                row = get_response(i, stack_code, START_DATE=START_DATE, END_DATE=END_DATE)
+                row = self.get_response(i, stack_code, START_DATE=START_DATE, END_DATE=END_DATE)
                 if not row:
                     __log_error('Failed to fetch page #' + str(i) +
                                 ': exceeding max reloading times (' + str(self.MAX_RELOAD_TIMES) + ').')
@@ -142,8 +158,8 @@ class JuChao_service():
         return output_csv_file
 
 
-    def download_pdf(path, MAX_COUNT=5):
-        global logger
+    def download_pdf(self,path, MAX_COUNT=5):
+
         print('get in download')
         print(self.url_list.qsize())
         DST_DIR = path
@@ -170,9 +186,9 @@ class JuChao_service():
                         break
                     except:
                         # 下载失败则报错误
-                        logger.error('Failed to download file', exc_info=True)
+                        self.logger.error('Failed to download file', exc_info=True)
                         now_thread = threading.current_thread()
-                        logger.warning(now_thread.getName() + str(now_thread.isAlive()))
+                        self.logger.warning(now_thread.getName() + str(now_thread.isAlive()))
                         print(str(each[0] + 1) + '::' + str(download_count) + ':\"' + '\" failed!')
                         download_token = False
                         time.sleep(3)  # 防止频繁访问网站被当做攻击关闭连接
@@ -198,7 +214,7 @@ class JuChao_service():
                 self.rLock.release()
 
 
-    def _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword, POS = 1):
+    def _parse_pdf_imp(self,path, table_keyword, inside_keyword, outside_keyword, POS = 1):
         open_pdf_succeed = 1
         start1 = time.time()
         try:
@@ -311,14 +327,7 @@ class JuChao_service():
             print('****time to open PDF file is {}'.format((start2 - start1)))
             print('****time to processing PDF file is {}'.format((start3 - start2)))
 
-
-
-
-
-
-    def parase_pdf(table_keyword, inside_keyword, outside_keyword):
-        global parase_out_writer
-        global parase_out
+    def parase_pdf(self,table_keyword, inside_keyword, outside_keyword):
         while True:
             try:
                 self.rLock2.acquire()
@@ -344,4 +353,4 @@ if __name__ == '__main__':
     outside_keyword = ['收到']
 
     path = "G:/_Stock/temp/000007全新好2016年半年度报告.(2181k).PDF"
-    _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword,0)
+    # _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword,0)
