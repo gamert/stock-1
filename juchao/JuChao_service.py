@@ -22,7 +22,13 @@ def InitLogger(log_name):
     logger.addHandler(fh)
     return logger
 
-# 
+URL = 'http://www.cninfo.com.cn/new/hisAnnouncement/query'
+HEADER = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+    'X-Requested-With': 'XMLHttpRequest'
+}
+
+# 从巨潮站获取pdf... 
 class JuChao_service():
 
     # 板块类型：沪市：shmb；深市：szse；深主板：szmb；中小板：szzx；创业板：szcy；
@@ -42,11 +48,6 @@ class JuChao_service():
         self.PLATE = PLATE
         self.CATEGORY = CATEGORY
 
-        self.URL = 'http://www.cninfo.com.cn/new/hisAnnouncement/query'
-        self.HEADER = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-            'X-Requested-With': 'XMLHttpRequest'
-        }
         self.MAX_PAGESIZE = 50
         self.MAX_RELOAD_TIMES = 5
         self.RESPONSE_TIMEOUT = 10
@@ -81,7 +82,7 @@ class JuChao_service():
     #            __sleeping(random.randint(5, 10))
     #            print('... reloading: the ' + str(reloading) + ' round ...')
             try:
-                r = requests.post(self.URL, query, self.HEADER, timeout=self.RESPONSE_TIMEOUT)
+                r = requests.post(URL, query, HEADER, timeout=self.RESPONSE_TIMEOUT)
             except Exception as e:
                 print(e)
                 continue
@@ -112,6 +113,8 @@ class JuChao_service():
 
 
     # 取得财报url:
+    # @START_DATE
+    # @END_DATE
     def get_url(self,OUT_DIR, stack_code_set, START_DATE, END_DATE):
         START_DATE = START_DATE + '-01-01'
         END_DATE = END_DATE + '-01-01'
@@ -215,130 +218,20 @@ class JuChao_service():
 
 
     def _parse_pdf_imp(self,path, table_keyword, inside_keyword, outside_keyword, POS = 1):
-        open_pdf_succeed = 1
-        start1 = time.time()
-        try:
-            pdf = pdfplumber.open(path, password='')
-        except:
-            os.remove(path)  # 屏蔽此处的话，如果文件打开出错，则不会删除
-            open_pdf_succeed = 0
-            print("*************open pdf error*******************")
-        start2 = time.time()
-        if open_pdf_succeed:
-            print("*************open pdf succeed*******************")
-            find_table = 0
-            find_pre_table = 0
-            find_keyword = 0
-            find_keyword_outside = 0
-            name_find = []
-            value_find = []
-            page_find = []
-            # for page in pdf.pages:
-            # print(page.extract_text())
-            begin_index = 0
-            if POS == 1:
-                begin_index = int(len(pdf.pages) / 2)
-            begin_index = 6
-
-            for i in range(begin_index, len(pdf.pages)):
-                if find_table:
-                    find_pre_table = 1
-                else:
-                    find_pre_table = 0
-                find_table = 0
-                page = pdf.pages[i]
-                # print(page.extract_text())
-                data = page.extract_text()
-                if len(table_keyword):
-                    for keyword in table_keyword:
-                        if keyword in data:
-                            find_table = 1
-                            break
-                        else:
-                            find_table = 0
-                            break
-                else:
-                    find_table = 1
-
-                if find_table or find_pre_table:
-
-                    # 解析表格
-                    # tables = page.extract_tables()
-                    # for table in tables:
-                    #     print(table)
-                    #     # df = pd.DataFrame(table[1:], columns=table[0])
-                    #     for row in table:
-                    #         for cell in row:
-                    #             print(cell, end="\t|")
-                    #         print()
-
-                    data_list = data.strip().split()
-                    for j in range(len(data_list)):
-                        if len(inside_keyword):
-                            for keyword in inside_keyword:
-                                if keyword in data_list[j]:
-                                    find_keyword = 1
-                        else:
-                            find_keyword = 1
-
-                        if find_keyword:
-                            find_keyword = 0
-                            print('run here')
-                            if len(outside_keyword):
-                                for keyword in outside_keyword:
-                                    if keyword not in data_list[j]:
-                                        find_keyword_outside = 1
-                                    else:
-                                        find_keyword_outside = 0
-                                        break
-                            else:
-                                find_keyword_outside = 1
-
-                            if find_keyword_outside:
-                                find_keyword_outside = 0
-                                try:
-                                    temp_value = data_list[j + 1]
-                                    temp_value = temp_value.replace(',', '')
-                                    temp_value = float(temp_value)
-                                    name_find.append(data_list[j])
-                                    value_find.append(temp_value)
-                                    page_find.append(i)
-                                    self.rLock3.acquire()
-                                    try:
-                                        parase_out_writer.writerows([[path.strip().split('/')[-1], data_list[j],
-                                                                    str(temp_value), data_list[j + 1], str(i)]])
-                                    except:
-                                        pass
-                                    parase_out.flush()
-                                    self.rLock3.release()
-                                    print("*****find******{} value is {} and {}".format(data_list[j], data_list[j + 1],
-                                                                                        temp_value))
-                                    print("*************find in page {}*******************".format(i))
-                                    print("*************find in {}*******************".format(path))
-                                    break  # only find one result
-                                except:
-                                    continue
-
-            pdf.close()
-            start3 = time.time()
-
-            os.remove(path)  # pdf.close 后删除文件 否则太多了
-
-            print('****time to open PDF file is {}'.format((start2 - start1)))
-            print('****time to processing PDF file is {}'.format((start3 - start2)))
+        pass
 
     def parase_pdf(self,table_keyword, inside_keyword, outside_keyword):
         while True:
             try:
+                path = None
                 self.rLock2.acquire()
                 if not self.pdffile_list.empty():
                     # self.rLock2.acquire()
-                    path = self.pdffile_list.get()
                     print('get pdf address')
+                    path = self.pdffile_list.get()
+                self.rLock2.release()
+                if path :
                     _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword)
-                    self.rLock2.release()
-                else:
-                    self.rLock2.release()
 
             except:
                 print('*****some thing error happend******')
