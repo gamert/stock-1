@@ -8,6 +8,9 @@ import threading
 import pdfplumber
 import logging
 
+from juchao.PdfCaibao import PdfCaibao
+
+
 def InitLogger(log_name):
     logger = logging.getLogger()
     logger.setLevel(logging.WARNING)
@@ -113,6 +116,7 @@ class JuChao_service():
 
 
     def get_response(self,page_num,stack_code,return_total_count=False,START_DATE = '2013-01-01',END_DATE = '2018-01-01'):
+        global __filter_illegal_filename
 
         query = {
             'stock': stack_code,
@@ -175,6 +179,7 @@ class JuChao_service():
     # @START_DATE
     # @END_DATE
     def get_url(self, stack_code_set, START_DATE, END_DATE):
+        global __log_error
         START_DATE = START_DATE + '-01-01'
         END_DATE = END_DATE + '-01-01'
         # 初始化重要变量
@@ -218,7 +223,7 @@ class JuChao_service():
         return output_csv_file
 
 
-    def download_pdf(self,path, MAX_COUNT=5):
+    def download_pdf(self, path, MAX_COUNT=5):
 
         print('get in download')
         print(self.url_list.qsize())
@@ -331,11 +336,14 @@ class PdfHandler_caiwuzhibiao(PdfHandler):
         # insert_db()
 
 if __name__ == '__main__':
+    path = "G:/_Stock/temp/000007全新好2016年半年度报告.(2181k).PDF"
     cwzb = PdfHandler_caiwuzhibiao()
-    jcs = JuChao_service(cwzb,None)
+    cwzb.handle(path)
+
+    jcs = JuChao_service(cwzb, None)
 
     stack_code_set = ['603118', '000002']  # just for test using
-    task = JuChaoServiceTask(jcs,stack_code_set,'2017','2019')
+    # task = JuChaoServiceTask(jcs, stack_code_set, '2017', '2019')
 
-    path = "G:/_Stock/temp/000007全新好2016年半年度报告.(2181k).PDF"
+    #jcs.parase_pdf()
     # _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword,0)
