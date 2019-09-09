@@ -39,6 +39,8 @@ def value_is_digit(v):
 
 # 转换财务数字: v = '-11,834,904.01'
 def VALUE_DIGIT(v):
+    if value_is_null(v):
+        return 0
     v = v.replace(",", "")
     v = v.replace("%", "")
     if value_is_null(v):
@@ -155,7 +157,7 @@ class CaiBaoDef():
 
         for i in range(len(merges)):
             index = merges[i]
-            pop_list_items(table, index, 4)
+            pop_list_items(table, index+1, 3)
 
 # 财报处理...'主要会计数据和财务指标'
 class PdfCaibao():
