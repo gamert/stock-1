@@ -1,12 +1,12 @@
 import csv
-import os
-import time
-import math
-import requests
-from queue import Queue
-import threading
-import pdfplumber
 import logging
+import math
+import os
+import threading
+import time
+from queue import Queue
+
+import requests
 
 from juchao.PdfCaibao import PdfCaibao
 

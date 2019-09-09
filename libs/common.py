@@ -3,18 +3,18 @@
 
 # apk add py-mysqldb or
 
-import platform
 import datetime
-import time
-import sys
 import os
-import MySQLdb
-from sqlalchemy import create_engine
-from sqlalchemy.types import NVARCHAR
-from sqlalchemy import inspect
-import tushare as ts
-import pandas as pd
+import sys
+import time
 import traceback
+
+import MySQLdb
+import pandas as pd
+import tushare as ts
+from sqlalchemy import create_engine
+from sqlalchemy import inspect
+from sqlalchemy.types import NVARCHAR
 
 # 使用环境变量获得数据库。兼容开发模式可docker模式。
 MYSQL_HOST = os.environ.get('MYSQL_HOST') if (os.environ.get('MYSQL_HOST') != None) else "127.0.0.1"
