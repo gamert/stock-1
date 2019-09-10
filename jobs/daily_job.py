@@ -15,7 +15,7 @@ import shutil
 
 
 ####### 使用 5.pdf，先做 基本面数据 的数据，然后在做交易数据。
-#
+# 获取每日龙虎榜列表
 def stat_all(tmp_datetime):
     datetime_str = (tmp_datetime).strftime("%Y-%m-%d")
     datetime_int = (tmp_datetime).strftime("%Y%m%d")

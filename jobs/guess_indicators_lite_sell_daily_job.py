@@ -2,13 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-import libs.common as common
-import pandas as pd
-import numpy as np
-import math
 import datetime
-import heapq
+import pandas as pd
 import stockstats
+
+import libs.common as common
 
 
 # code      date today_trade

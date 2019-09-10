@@ -32,14 +32,14 @@ def standardize_dir(dir_str):
         return dir_str
 
 error_log = "./error.log"
-def __log_error(err_msg):
+def _log_error(err_msg):
     err_msg = str(err_msg)
     print(err_msg)
     with open(error_log, 'a', encoding='gb18030') as err_writer:
         err_writer.write(err_msg + '\n')
 
 
-def __filter_illegal_filename(filename):
+def _filter_illegal_filename(filename):
     illegal_char = {
         ' ': '',
         '*': '',
@@ -116,8 +116,6 @@ class JuChao_service():
 
 
     def get_response(self,page_num,stack_code,return_total_count=False,START_DATE = '2013-01-01',END_DATE = '2018-01-01'):
-        global __filter_illegal_filename
-
         query = {
             'stock': stack_code,
             'searchkey': '',
@@ -161,25 +159,29 @@ class JuChao_service():
         else:
             for each in my_query['announcements']:
                 file_link = 'http://static.cninfo.com.cn/' + str(each['adjunctUrl'])
-                file_name = __filter_illegal_filename(
+                file_name = _filter_illegal_filename(
                     str(each['secCode']) + str(each['secName']) + str(each['announcementTitle']) + '.'  + '(' + str(each['adjunctSize'])  + 'k)' +
                     file_link[-file_link[::-1].find('.') - 1:]  # 最后一项是获取文件类型后缀名
                 )
-                if file_name.endswith('.PDF') or file_name.endswith('.pdf'):
-                    if '取消' not in file_name and '摘要' not in file_name and '年度' in file_name and\
-                    '更正' not in file_name and '英文' not in file_name and '补充' not in file_name:
-                        result_list.append([file_name, file_link])
-                        self.rLock.acquire()
-                        self.url_list.put([file_name, file_link])
-                        self.rLock.release()
+                if self.need_down_file(file_name):
+                    result_list.append([file_name, file_link])
+                    self.rLock.acquire()
+                    self.url_list.put([file_name, file_link])
+                    self.rLock.release()
             return result_list
 
+    # 报告分类...
+    def need_down_file(self,file_name):
+        if file_name.endswith('.PDF') or file_name.endswith('.pdf'):
+            if '取消' not in file_name and '摘要' not in file_name and '年度' in file_name and \
+                    '更正' not in file_name and '英文' not in file_name and '补充' not in file_name:
+                return True
+        return False
 
     # 取得财报url:
     # @START_DATE
     # @END_DATE
     def get_url(self, stack_code_set, START_DATE, END_DATE):
-        global __log_error
         START_DATE = START_DATE + '-01-01'
         END_DATE = END_DATE + '-01-01'
         # 初始化重要变量
@@ -206,7 +208,7 @@ class JuChao_service():
             for i in range(begin_pg, end_pg + 1):
                 row = self.get_response(i, stack_code, START_DATE=START_DATE, END_DATE=END_DATE)
                 if not row:
-                    __log_error('Failed to fetch page #' + str(i) +
+                    _log_error('Failed to fetch page #' + str(i) +
                                 ': exceeding max reloading times (' + str(self.MAX_RELOAD_TIMES) + ').')
                     continue
                 else:
@@ -223,11 +225,11 @@ class JuChao_service():
         return output_csv_file
 
 
-    def download_pdf(self, path, MAX_COUNT=5):
+    def download_pdf(self, MAX_COUNT=5):
 
         print('get in download')
         print(self.url_list.qsize())
-        DST_DIR = path
+        DST_DIR = self.out_dir
         assert (os.path.exists(DST_DIR)), 'No such destination directory \"' + DST_DIR + '\"!'
         if DST_DIR[len(DST_DIR) - 1] != '/':
             DST_DIR += '/'
@@ -266,7 +268,7 @@ class JuChao_service():
                         print(each[0] + '\" downloaded.')
                         self.rLock2.acquire()
                         self.pdffile_list.put(DST_DIR + each[0])
-                        print('write pdf address ')
+                        #print('write pdf address ')
                         self.rLock2.release()
                 else:
                     # 彻底下载失败则记录日志
@@ -302,8 +304,8 @@ class JuChao_service():
 class JuChaoServiceTask():
     def __init__(self, juchao_service, stack_code_set, START_DATE, END_DATE): 
 
-        get_url_thread = threading.Thread(target=juchao_service.get_url, args=(stack_code_set, START_DATE, END_DATE))
-        download_pdf_thread = threading.Thread(target=juchao_service.download_pdf, args=(stack_code_set, START_DATE, END_DATE))
+        get_url_thread = threading.Thread(target=juchao_service.get_url, args=( stack_code_set, START_DATE, END_DATE))
+        download_pdf_thread = threading.Thread(target=juchao_service.download_pdf)
         # download_pdf_thread2 = threading.Thread(target=download_pdf, args=(OUT_DIR,))
         parase_pdf_thread = threading.Thread(target=juchao_service.parase_pdf)
         parase_pdf_thread2 = threading.Thread(target=juchao_service.parase_pdf)
@@ -338,12 +340,11 @@ class PdfHandler_caiwuzhibiao(PdfHandler):
 if __name__ == '__main__':
     path = "G:/_Stock/temp/000007全新好2016年半年度报告.(2181k).PDF"
     cwzb = PdfHandler_caiwuzhibiao()
-    cwzb.handle(path)
-
+    # cwzb.handle(path)
     jcs = JuChao_service(cwzb, None)
 
-    stack_code_set = ['603118', '000002']  # just for test using
-    # task = JuChaoServiceTask(jcs, stack_code_set, '2017', '2019')
+    stack_code_set = ['000996']  # just for test using '603118', 000002
+    task = JuChaoServiceTask(jcs, stack_code_set, '2018', '2020')
 
     #jcs.parase_pdf()
     # _parse_pdf_imp(path, table_keyword, inside_keyword, outside_keyword,0)

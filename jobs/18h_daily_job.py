@@ -26,7 +26,7 @@ def stat_index_all(tmp_datetime):
     print("datetime_str:", datetime_str)
     print("datetime_int:", datetime_int)
 
-
+    # 获取大盘指数行情
     data = ts.get_index()
     # 处理重复数据，保存最新一条数据。最后一步处理，否则concat有问题。
     if not data is None and len(data) > 0:

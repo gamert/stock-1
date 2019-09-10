@@ -54,7 +54,7 @@ def insert_db(data, table_name, write_index, primary_keys):
     insert_other_db(MYSQL_DB, data, table_name, write_index, primary_keys)
 
 
-# 增加一个插入到其他数据库的方法。
+# 增加一个插入到其他数据库的方法。 data=DataFrame
 def insert_other_db(to_db, data, table_name, write_index, primary_keys):
     # 定义engine
     engine_mysql = engine_to_db(to_db)

@@ -2,17 +2,12 @@
 # -*- coding: utf-8 -*-
 
 
-import libs.common as common
-import sys
-import time
-import pandas as pd
-import numpy as np
-import math
-import tushare as ts
-from sqlalchemy.types import NVARCHAR
-from sqlalchemy import inspect
 import datetime
-import heapq
+import math
+import numpy as np
+import pandas as pd
+
+import libs.common as common
 
 """
 SELECT `date`, `code`, `name`, `changepercent`, `trade`, `open`, `high`, `low`, 
