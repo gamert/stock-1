@@ -20,6 +20,8 @@ year = 2019
 quarter = 1
 
 class eastmoney_cwbb_crawler():
+    def __init__(self, fn_item_filter = None):
+        self.fn_item_filter = fn_item_filter
 
     # 1 设置表格爬取时期
     def set_table(self):
@@ -83,7 +85,7 @@ class eastmoney_cwbb_crawler():
             category_type = 'YJBB20_'
             st = 'ndate'
             sr = -1
-            filter = " (IsLatest='T')(enddate=^2018-06-30^)"
+            filter = " (IsLatest='T')(enddate=^2019-09-30^)"
         elif bb_type == 4:
             category_type = 'YJBB20_'
             st = 'frdate'
@@ -180,6 +182,9 @@ class eastmoney_cwbb_crawler():
     # 写入表头
     # 方法1 借助csv包，最常用
     def write_header(self, data, category):
+        if len(data) == 0 :
+            print("write_header: len(data) == 0")
+            return
         with open(self._build_file_name(category), 'a', encoding='utf_8_sig', newline='') as f:
             headers = list(data[0].keys())
             # print(headers)  # 测试 ok
@@ -190,10 +195,11 @@ class eastmoney_cwbb_crawler():
     def write_table(self,data, page, category):
         print('\n正在下载第 %s 页表格' % page)
         # 写入文件方法1
-        for d in data:
-            with open(self._build_file_name(category), 'a', encoding='utf_8_sig', newline='') as f:
-                w = csv.writer(f)
-                w.writerow(d.values())
+        with open(self._build_file_name(category), 'a', encoding='utf_8_sig', newline='') as f:
+            w = csv.writer(f)
+            for d in data:
+                if not self.fn_item_filter or self.fn_item_filter(d):
+                    w.writerow(d.values())
 
     #category_type = {str} 'YJBB20_YJBB'
     # date = {str} '2019-06-30'
@@ -235,19 +241,33 @@ class eastmoney_cwbb_crawler():
             sr = i.get('sr')
             filter = i.get('filter')
 
-        self.crawl(date, category, category_type, st, sr, filter, start_page, end_page)
+        self._crawl(date, category, category_type, st, sr, filter, start_page, end_page)
 
     def main_bat(self):
         params_dic = self.set_table()
         # 1-业绩报表；2-业绩快报表：3-业绩预告表；4-预约披露时间表；5-资产负债表；6-利润表；7-现金流量表
-        # params_dic = self.set_talbe_param("2019-09-30", 2)
+        # params_dic = self.set_talbe_param("2019-06-30", 2)
         self.do_clawl(params_dic)
 
+# <class 'dict'>: {'scode': '601077', 'sname': '渝农商行', 'sclx': '上交所主板',
+# 'enddate': '2019-09-30T00:00:00',# 'forecastl': '8255000000',# 'forecastt': '8845000000',
+# 'increasel': '12.54',# 'increaset': '20.59',
+# 'forecastcontent': '预计2019年1-9月归属于上市公司股东的净利润:825,500万元-884500万元,同比增长12.54%-20.59%。',
+# 'changereasondscrpt': '',# 'forecasttype': '略增',# 'yearearlier': '-',
+# 'ndate': '2019-09-10T00:00:00',
+# 'hymc': '银行', 'zfpx': 16.565, 'jlrpx': 8550000000.0, 'forecast': 'increase', 'IsLatest': 'T', 'securitytypecode': '058001001', 'trademarketcode': '069001001001'}
+def item_filter_YJYB(item):
+    increaset = item["increaset"]
+    if increaset == '-':
+        return False
+    increaset = float(increaset)
+    return increaset>=30
 
 if __name__ == '__main__':
-    ec = eastmoney_cwbb_crawler()
-    params_dic = ec.set_talbe_param("2019-09-30", 2)
-    ec.do_clawl(params_dic, 0, 1)
+    #             input('请输入查询的报表种类对应的数字(1-业绩报表；2-业绩快报表：3-业绩预告表；4-预约披露时间表；5-资产负债表；6-利润表；7-现金流量表): \n'))
+    ec = eastmoney_cwbb_crawler(item_filter_YJYB)
+    params_dic = ec.set_talbe_param("2019-09", 3) # -30
+    ec.do_clawl(params_dic, 0, 2)
 
     # 创建数据库..
     header = ['scode', 'sname', 'securitytype', 'trademarket', 'latestnoticedate', 'reportdate', 'basiceps', 'cutbasiceps', 'totaloperatereve', 'ystz', 'yshz', 'parentnetprofit', 'sjltz', 'sjlhz', 'roeweighted', 'bps', 'mgjyxjje', 'xsmll', 'publishname', 'assigndscrpt', 'gxl', 'securitytypecode', 'trademarketcode', 'firstnoticedate']
