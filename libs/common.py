@@ -68,7 +68,7 @@ def insert_other_db(to_db, data, table_name, write_index, primary_keys):
         col_name_list.insert(0, data.index.name)
     print(col_name_list)
     data.to_sql(name=table_name, con=engine_mysql, schema=to_db, if_exists='append',
-                dtype={col_name: NVARCHAR(length=255) for col_name in col_name_list}, index=write_index)
+                dtype={col_name: NVARCHAR(length=512) for col_name in col_name_list}, index=write_index, method='multi')
     # 判断是否存在主键
     if insp.get_primary_keys(table_name) == []:
         with engine_mysql.connect() as con:

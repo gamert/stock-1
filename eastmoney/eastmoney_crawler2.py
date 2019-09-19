@@ -10,6 +10,10 @@ import time
 import requests
 
 # 设置文件保存在D盘eastmoney文件夹下
+from pandas.io.json import json_normalize
+
+from libs import common
+
 file_path = '.\\eastmoney'
 if not os.path.exists(file_path):
     os.mkdir(file_path)
@@ -256,16 +260,33 @@ class eastmoney_cwbb_crawler():
 # 'changereasondscrpt': '',# 'forecasttype': '略增',# 'yearearlier': '-',
 # 'ndate': '2019-09-10T00:00:00',
 # 'hymc': '银行', 'zfpx': 16.565, 'jlrpx': 8550000000.0, 'forecast': 'increase', 'IsLatest': 'T', 'securitytypecode': '058001001', 'trademarketcode': '069001001001'}
-def item_filter_YJYB(item):
-    increaset = item["increaset"]
-    if increaset == '-':
-        return False
-    increaset = float(increaset)
-    return increaset>=30
+
+class item_filter():
+    def __init__(self):
+        pass
+
+    def item_filter_YJYB(self, item):
+        increaset = item["increaset"]
+        if increaset == '-':
+            return False
+        increaset = float(increaset)
+        bsave = increaset>=30
+        if bsave:
+            # pd.read_json(elevations)
+            # train = pd.DataFrame.from_dict(dict_train, orient='index')
+            # train.reset_index(level=0, inplace=True)
+            item["changereasondscrpt"] = ""
+            df = json_normalize(item)
+            try:
+                common.insert_db(df, "eastmoney_cwbb_yjyb", False, "`scode`,`enddate`")
+            except Exception as e:
+                print(e)
+        return bsave
 
 if __name__ == '__main__':
     #             input('请输入查询的报表种类对应的数字(1-业绩报表；2-业绩快报表：3-业绩预告表；4-预约披露时间表；5-资产负债表；6-利润表；7-现金流量表): \n'))
-    ec = eastmoney_cwbb_crawler(item_filter_YJYB)
+    filter = item_filter()
+    ec = eastmoney_cwbb_crawler(filter.item_filter_YJYB)
     params_dic = ec.set_talbe_param("2019-09", 3) # -30
     ec.do_clawl(params_dic, 0, 2)
 
