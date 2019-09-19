@@ -50,7 +50,7 @@ code_name = dict(zip(names, codes))
 # 使用tushare获取上述股票周价格数据并转换为周收益率
 # 设定默认起始日期为2018年1月5日，结束日期为2019年3月19日
 # 日期可以根据需要自己改动
-def get_data(code, start='20100101', end='20190319'):
+def get_data(code, start='20150101', end='20190319'):
     df = pro.daily(ts_code=code, start_date=start, end_date=end, fields='trade_date,close')
     # 将交易日期设置为索引值
     df.index = pd.to_datetime(df.trade_date)
@@ -130,8 +130,13 @@ for date in df_new.index:
 
 
 def plot_rps(stock):
+    ddf = data[stock]
+    if not ddf:
+        print("plot_rps not find: ",stock)
+        return
+
     plt.subplot(211)
-    data[stock][120:].plot(figsize=(16, 16), color='r')
+    ddf[120:].plot(figsize=(16, 16), color='r')
     plt.title(stock + '股价走势', fontsize=15)
     plt.yticks(fontsize=12)
     plt.xticks([])
@@ -156,7 +161,7 @@ df_rps = pd.DataFrame()
 for date in dates:
     df_rps[date] = rps120[date].index[:50]
 
-plot_rps('东方通信')
+plot_rps('万科A')
 plot_rps('华业资本')
 plot_rps('顺鑫农业')
 
@@ -164,21 +169,13 @@ plot_rps('顺鑫农业')
 # 这并不意味着，只要RPS>87%就可以买入该股票呢？其实RPS指标只是对强势股的个一个初步筛选，对于A股而言，RPS大于87%的股票就有400多只，
 # 都买进也不太现实，具体运用还需结合个股基本面、题材和整体市场情况分析。RPS实际上是欧奈尔在《笑傲股市》中提出的CANSLIM七步选股法的一个技术分析。
 # 各字母含义如下所示：
-#
 # C：最近一季度报表显示的盈利（每股收益）
-#
 # A：每年度每股盈利的增长幅度
-#
 # N：新产品，新服务，股价创新高
-#
 # S：该股流通盘大小，市值以及交易量的情况
-#
 # L：该股票在行业中的低位，是否为龙头
-#
 # I：该股票有无有实力的庄家，机构大流通股东
-#
 # M：大盘走势如何，如何判断大盘走向
-#
 # RPS可以帮助选出创出新高的股票。牛股一定创新高，但是新高不一定是牛股。所以关键是将RPS结合基本面进一步选择，基本面情况好，
 # 销售额和盈利增长很快，且这种增长是由公司推出的新产品或新服务带来的。本文主要分享了欧奈尔RPS指标的原理和Python计算方法，受篇幅所限，
 # 文中只给出了核心代码，如需完整代码可通过加入知识星球，向博主索要。文中提及股票不构成任何投资建议，投资有风险，入市需谨慎！
