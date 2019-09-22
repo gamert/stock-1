@@ -36,6 +36,7 @@ class ts_over_week_line(tushare_base):
 
     def is_break_high(self, stockID, start_day,end_day):
 
+        # 如何保存k线数据进行快速计算？
         df = ts.get_k_data(stockID, start=start_day, end=end_day, ktype='W')
 
         period_high = df['high'].max()

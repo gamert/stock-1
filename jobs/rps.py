@@ -79,7 +79,8 @@ def cal_ret(df, w=5):
     return df.iloc[w:, :].fillna(0)
 
 
-# 经过这一轮的大幅上涨，截至2019年3月19日，上述3024只股票中，有49只股票120日收益率超过100%，占比1.68%；收益率在20%-100%之间的股票有1280只，占比达到43.99%；仍有360只股票120日收益率为负数。
+# 经过这一轮的大幅上涨，截至2019年3月19日，上述3024只股票中，有49只股票120日收益率超过100%，占比1.68%；
+# 收益率在20%-100%之间的股票有1280只，占比达到43.99%；仍有360只股票120日收益率为负数。
 
 
 ret120 = cal_ret(data, w=120)
@@ -98,8 +99,9 @@ def all_RPS(data):
     dates = (data.index).strftime('%Y%m%d')
     RPS = {}
     for i in range(len(data)):
-        RPS[dates[i]] = pd.DataFrame(get_RPS(data.iloc[i]).values, columns=['收益率', '排名', 'RPS'],
-                                     index=get_RPS(data.iloc[i]).index)
+        df = get_RPS(data.iloc[i])
+        RPS[dates[i]] = pd.DataFrame(df.values, columns=['收益率', '排名', 'RPS'],
+                                     index=df.index)
     return RPS
 
 
@@ -162,8 +164,8 @@ for date in dates:
     df_rps[date] = rps120[date].index[:50]
 
 plot_rps('万科A')
-plot_rps('华业资本')
-plot_rps('顺鑫农业')
+# plot_rps('华业资本')
+# plot_rps('顺鑫农业')
 
 # 欧奈尔研究了1953年至1993年，500只年度涨幅最大的股票，发现每年涨幅居前的，在他们股价真正大幅度攀升之前，其平均的相对强弱指标RPS为87％。
 # 这并不意味着，只要RPS>87%就可以买入该股票呢？其实RPS指标只是对强势股的个一个初步筛选，对于A股而言，RPS大于87%的股票就有400多只，
