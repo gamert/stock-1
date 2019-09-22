@@ -27,7 +27,7 @@ pro = ts.pro_api()
 
 df = pro.stock_basic(exchange='', list_status='L',
                      fields='ts_code,symbol,name,area,industry,list_date')
-print(len(df))
+# print(len(df))
 # 输出结果：3594
 
 
@@ -36,7 +36,7 @@ print(len(df))
 # 19960101 : 272
 # 19930101 : 47
 # 19920101 : 11
-df = df[df['list_date'].apply(int).values < 19930101]
+df = df[df['list_date'].apply(int).values < 20170101]
 print(len(df))
 # 输出结果：3024
 
@@ -81,7 +81,6 @@ def cal_ret(df, w=5):
 
 # 经过这一轮的大幅上涨，截至2019年3月19日，上述3024只股票中，有49只股票120日收益率超过100%，占比1.68%；
 # 收益率在20%-100%之间的股票有1280只，占比达到43.99%；仍有360只股票120日收益率为负数。
-
 
 ret120 = cal_ret(data, w=120)
 
@@ -162,6 +161,8 @@ dates = ['20180731', '20180831', '20180928', '20181031', '20181130', '20181228',
 df_rps = pd.DataFrame()
 for date in dates:
     df_rps[date] = rps120[date].index[:50]
+
+print(df_rps)
 
 plot_rps('万科A')
 # plot_rps('华业资本')
