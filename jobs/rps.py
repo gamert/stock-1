@@ -8,6 +8,8 @@
 # 以此类推。RPS时间周期可以自己根据需要进行调整，常用的有60日（3个月）、120日（半年）和250日（一年）等。
 
 # 先引入后面可能用到的library
+import time
+
 import pandas as pd
 import tushare as ts
 import matplotlib.pyplot as plt
@@ -64,7 +66,11 @@ def get_data(code, start='20150101', end='20190319'):
 # 构建一个空的dataframe用来装数据
 data = pd.DataFrame()
 for name, code in code_name.items():
-    data[name] = get_data(code)
+    try:
+        data[name] = get_data(code)
+    except Exception as e:
+        print(e)
+    time.sleep(0.5)
 
 
 # data.to_csv('daily_data.csv',encoding='gbk')
