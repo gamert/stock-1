@@ -33,11 +33,11 @@ import pylab as pl
 import datetime
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter, WeekdayLocator, DayLocator, MONDAY,YEARLY
-from matplotlib.finance import quotes_historical_yahoo_ohlc, candlestick_ohlc
+#from matplotlib.finance import quotes_historical_yahoo_ohlc, candlestick_ohlc
 
 from matplotlib.pylab import date2num
 
-import talib
+#import talib
 from dateutil.parser import parse
 import tushare as ts
 

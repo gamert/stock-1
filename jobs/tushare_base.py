@@ -13,9 +13,24 @@ mpl.rcParams['axes.unicode_minus'] = False
 
 # 使用之前先输入token，可以从个人主页上复制出来，
 # 每次调用数据需要先运行该命令
+
 token = '1a5a1c37219acda3a569e8b809bd86b06ebc7c34d8dee170ef5ad5d1'
 ts.set_token(token)
 pro = ts.pro_api()
+
+# 计算期货期指信息
+class tushare_future_base:
+    def __init__(self):
+        df = pro.fut_basic(exchange='DCE', fut_type='1', fields='ts_code,symbol,name,list_date,delist_date')
+        print(df)
+        pass
+
+
+if __name__ == "__main__" :
+    #startTime = datetime.time.time()
+    fb = tushare_future_base()
+
+
 
 class tushare_base:
     def __init__(self):
