@@ -9,37 +9,48 @@ print(is_auth)
 # res.to_excel('futures'+".xlsx")
 # print(res)
 
-code = 'IC8888.CCFX'
-res = get_price(code, start_date='2015-01-01', end_date='2020-08-22 23:00:00').dropna()
-res.to_excel(code+".xlsx")
-print(res)
+_end_date='2020-08-22 23:00:00'
+_end_date='2020-09-27 23:00:00'
 
-code = 'IC9999.CCFX'
-res = get_price(code, start_date='2015-01-01', end_date='2020-08-22 23:00:00').dropna()
-res.to_excel(code+".xlsx")
-print(res)
+#
+# code = 'IC8888.CCFX'
+# res = get_price(code, start_date='2015-01-01', end_date=_end_date).dropna()
+# res.to_excel(code+".xlsx")
+# print(res)
+
+# 主力合约
+# code = 'IC9999.CCFX'
+# res = get_price(code, start_date='2020-01-01', end_date=_end_date).dropna()
+# res.to_excel(code+".xlsx")
+# print(res)
 
 # code = 'IC2003.CCFX'
-# res = get_price(code, start_date='2015-01-01', end_date='2020-08-21 23:00:00').dropna()
+# res = get_price(code, start_date='2019-01-01', end_date=_end_date).dropna()
 # res.to_excel(code+".xlsx")
 # print(res)
 #
 # code  = 'IC2006.CCFX'
-# res = get_price(code, start_date='2015-01-01', end_date='2020-08-21 23:00:00').dropna()
+# res = get_price(code, start_date='2019-01-01', end_date=_end_date).dropna()
 # res.to_excel(code+".xlsx")
 # print(res)
 #
 # code  = 'IC2009.CCFX'
-# res = get_price(code, start_date='2015-01-01', end_date='2020-08-21 23:00:00').dropna()
+# res = get_price(code, start_date='2019-01-01', end_date=_end_date).dropna()
 # res.to_excel(code+".xlsx")
 # print(res)
 # # res  = get_security_info(code)
 # # print(res)
 #
 # code  = 'IC2012.CCFX'
-# res = get_price(code, start_date='2015-01-01', end_date='2020-08-21 23:00:00').dropna()
+# res = get_price(code, start_date='2020-01-01', end_date=_end_date).dropna()
 # res.to_excel(code+".xlsx")
 # print(res)
+
+_fields=['open', 'close', 'low', 'high', 'volume', 'money', 'factor', 'high_limit', 'low_limit', 'avg', 'pre_close', 'paused']
+code  = 'IC2103.CCFX'
+res = get_price(code, start_date='2020-01-01', end_date=_end_date,fields=_fields).dropna()
+res.to_excel(code+".xlsx")
+print(res)
 
 # futures = 'IC1505.CCFX'
 # h = attribute_history(futures, 5, '1d', ('open','close','volume')) # 取得IC1505过去5天的每天的开盘价, 收盘价, 交易量,
